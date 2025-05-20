@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const path = require("path");
+
 const axios = require("axios");
 const { MongoClient, ObjectId, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
@@ -60,11 +62,25 @@ async function run() {
 
     // Add favorite movie
     app.post("/api/favorites", verifyToken, async (req, res) => {
-      const favorite = { ...req.body, email: req.email };
+      const { imdbID, Title, Poster, videoUrl } = req.body;
+
+      if (!imdbID || !Title || !Poster) {
+        return res.status(400).send({ error: "Missing required movie data" });
+      }
+
+      const favorite = {
+        imdbID,
+        Title,
+        Poster,
+        videoUrl,
+        email: req.email,
+      };
+
       const result = await favoritesCollection.insertOne(favorite);
       res.send(result);
     });
 
+    app.use("/videos", express.static(path.join(__dirname, "videos")));
     // Delete favorite movie by id
     app.delete("/favorites/:id", verifyToken, async (req, res) => {
       const result = await favoritesCollection.deleteOne({
