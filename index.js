@@ -127,12 +127,10 @@ async function run() {
     // If you need to close in special cases, use: await client.close();
   }
 }
-
+// Run server
+run().catch(console.dir);
 app.get("/", (req, res) => {
   res.send("✅ Movie Server is running");
 });
-
-// Run server
-run().catch(console.dir);
 
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
