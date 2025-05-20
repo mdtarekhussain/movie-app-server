@@ -2,16 +2,18 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const path = require("path");
-
 const axios = require("axios");
 const { MongoClient, ObjectId, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
 
 const app = express();
+const PORT = 5000;
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection
+// MongoDB Connection URI
 const uri = `mongodb+srv://${process.env.USER_NAME}:${process.env.DB_PASSWORD}@cluster0.vcokv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const client = new MongoClient(uri, {
   serverApi: {
@@ -21,7 +23,7 @@ const client = new MongoClient(uri, {
   },
 });
 
-// JWT middleware
+// JWT Middleware
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).send({ error: "No token provided" });
@@ -34,12 +36,13 @@ const verifyToken = (req, res, next) => {
   });
 };
 
+// Main logic
 async function run() {
   try {
     await client.connect();
 
-    const favoritesCollection = client.db("movieDB").collection("favorites");
-    const userCollection = client.db("movieDB").collection("user");
+    const db = client.db("movieDB");
+    const favoritesCollection = db.collection("favorites");
 
     // JWT issue route
     app.post("/jwt", (req, res) => {
@@ -49,10 +52,11 @@ async function run() {
       const token = jwt.sign({ email }, process.env.JWT_SECRET, {
         expiresIn: "1d",
       });
+
       res.send({ token });
     });
 
-    // Get favorites for user
+    // Get favorites
     app.get("/favorites", verifyToken, async (req, res) => {
       const favorites = await favoritesCollection
         .find({ email: req.email })
@@ -80,8 +84,7 @@ async function run() {
       res.send(result);
     });
 
-    app.use("/videos", express.static(path.join(__dirname, "videos")));
-    // Delete favorite movie by id
+    // Delete favorite by _id
     app.delete("/favorites/:id", verifyToken, async (req, res) => {
       const result = await favoritesCollection.deleteOne({
         _id: new ObjectId(req.params.id),
@@ -90,6 +93,10 @@ async function run() {
       res.send(result);
     });
 
+    // Serve static video files from /videos folder
+    app.use("/videos", express.static(path.join(__dirname, "videos")));
+
+    // OMDb Movie Search
     app.get("/api/search", async (req, res) => {
       const query = req.query.query;
       if (!query) {
@@ -104,25 +111,28 @@ async function run() {
         );
 
         if (response.data.Response === "True") {
-          return res.send(response.data.Search);
+          res.send(response.data.Search);
         } else {
-          return res.status(404).send({ error: response.data.Error });
+          res.status(404).send({ error: response.data.Error });
         }
       } catch (error) {
         console.error("OMDb API error:", error.response?.data || error.message);
-        return res
-          .status(500)
-          .send({ error: "Failed to fetch movies from OMDb" });
+        res.status(500).send({ error: "Failed to fetch movies from OMDb" });
       }
     });
 
     console.log("✅ Server and DB connected, ready to accept requests.");
-  } catch (error) {
-    console.error("Failed to connect to MongoDB", error);
+  } finally {
+    // MongoClient stays open for server lifetime
+    // If you need to close in special cases, use: await client.close();
   }
-  // do not close client here; keep server running
 }
 
+app.get("/", (req, res) => {
+  res.send("✅ Movie Server is running");
+});
+
+// Run server
 run().catch(console.dir);
 
-app.listen(5000, () => console.log("🚀 Server running on port 5000"));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
