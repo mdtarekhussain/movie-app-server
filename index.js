@@ -121,7 +121,7 @@ async function run() {
       }
     });
 
-    console.log("✅ Server and DB connected, ready to accept requests.");
+    console.log(" Server and DB connected, ready to accept requests.");
   } finally {
     // MongoClient stays open for server lifetime
     // If you need to close in special cases, use: await client.close();
@@ -130,7 +130,9 @@ async function run() {
 // Run server
 run().catch(console.dir);
 app.get("/", (req, res) => {
-  res.send("✅ Movie Server is running");
+  res.send(" Movie Server is running");
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
