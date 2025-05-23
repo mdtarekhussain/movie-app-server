@@ -92,9 +92,153 @@ async function run() {
       });
       res.send(result);
     });
+    // Dummy static movies list for default display
+    app.get("/api/default-movies", async (req, res) => {
+      const titles = [
+        "The Notebook",
+        "The Blind Side",
+        "The Great Gatsby",
+        "Les Misérables",
+        "The Danish Girl",
+        "The Theory of Everything",
+        "Me Before You",
+        "Call Me by Your Name",
+        "The Perks of Being a Wallflower",
+        "500 Days of Summer",
+        "Marriage Story",
+        "Brooklyn",
+        "Little Women",
+        "The Intern",
+        "About Time",
+        "The Vow",
+        "One Day",
+        "A Walk to Remember",
+        "The Lucky One",
+        "Remember Me",
+        "The Spectacular Now",
+        "Begin Again",
+        "Crazy Rich Asians",
+        "The Big Sick",
+        "Love, Rosie",
+        "Yesterday",
+        "La La Land",
+        "Silver Linings Playbook",
+        "To All the Boys I've Loved Before",
+        "Set It Up",
+        "Always Be My Maybe",
+        "Notting Hill",
+        "Love Actually",
+        "P.S. I Love You",
+        "Bridget Jones's Diary",
+        "The Holiday",
+        "Crazy, Stupid, Love",
+        "Just Go with It",
+        "Hitch",
+        "The Proposal",
+        "27 Dresses",
+        "The Ugly Truth",
+        "What Women Want",
+        "13 Going on 30",
+        "She's the Man",
+        "Mean Girls",
+        "Clueless",
+        "Legally Blonde",
+        "Easy A",
+        "Confessions of a Shopaholic",
+        "The Devil Wears Prada",
+        "The Princess Diaries",
+        "Ella Enchanted",
+        "A Cinderella Story",
+        "Freaky Friday",
+        "High School Musical",
+        "Camp Rock",
+        "The Parent Trap",
+        "Sky High",
+        "Enchanted",
+        "National Treasure",
+        "Night at the Museum",
+        "Percy Jackson & the Olympians",
+        "Eragon",
+        "Inkheart",
+        "The Spiderwick Chronicles",
+        "Bridge to Terabithia",
+        "Narnia: The Lion, the Witch and the Wardrobe",
+        "Narnia: Prince Caspian",
+        "Narnia: The Voyage of the Dawn Treader",
+        "The Golden Compass",
+        "Stardust",
+        "Pan's Labyrinth",
+        "The BFG",
+        "Charlie and the Chocolate Factory",
+        "Willy Wonka & the Chocolate Factory",
+        "Matilda",
+        "Coraline",
+        "Monster House",
+        "The Adventures of Tintin",
+        "Treasure Planet",
+        "Atlantis: The Lost Empire",
+        "The Iron Giant",
+        "The Road to El Dorado",
+        "Spirit: Stallion of the Cimarron",
+        "Ice Age",
+        "Madagascar",
+        "The Croods",
+        "Ferdinand",
+        "Bolt",
+        "Brother Bear",
+        "Open Season",
+        "Surf's Up",
+        "Cloudy with a Chance of Meatballs",
+        "Hotel Transylvania",
+        "Rio",
+        "Epic",
+        "Home",
+        "Megamind",
+        "Monsters vs. Aliens",
+        "Bee Movie",
+        "Over the Hedge",
+        "Chicken Run",
+        "Flushed Away",
+        "Arthur Christmas",
+        "The Angry Birds Movie",
+        "Peter Rabbit",
+        "Paddington",
+        "Paddington 2",
+        "Shaun the Sheep Movie",
+        "Wallace & Gromit: The Curse of the Were-Rabbit",
+        "Chicken Little",
+        "The Wild",
+        "Planes",
+        "Cars",
+        "Cars 2",
+        "Cars 3",
+        "Turbo",
+        "Ballerina",
+        "Sing 2",
+        "Trolls",
+        "Trolls World Tour",
+        "The Boss Baby",
+        "Storks",
+        "Abominable",
+      ];
 
-    // Serve static video files from /videos folder
-    app.use("/videos", express.static(path.join(__dirname, "videos")));
+      try {
+        const responses = await Promise.all(
+          titles.map((title) =>
+            axios.get(
+              `https://www.omdbapi.com/?apikey=${
+                process.env.OMDB_API_KEY
+              }&t=${encodeURIComponent(title)}`
+            )
+          )
+        );
+        const movies = responses.map((r) => r.data);
+        res.send(movies);
+      } catch (error) {
+        console.error("Default movie fetch error:", error.message);
+        res.status(500).send({ error: "Failed to fetch default movies" });
+      }
+    });
 
     // OMDb Movie Search
     app.get("/api/search", async (req, res) => {
