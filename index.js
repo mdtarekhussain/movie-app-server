@@ -93,7 +93,7 @@ async function run() {
       res.send(result);
     });
     // Dummy static movies list for default display
-    app.get("/api/default-movies", async (req, res) => {
+    app.get("/api/movies", async (req, res) => {
       const titles = [
         "The Notebook",
         "The Blind Side",
